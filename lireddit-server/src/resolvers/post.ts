@@ -1,5 +1,3 @@
-import { isAuth } from '../middleware/isAuth';
-import { Mycontext } from '../types';
 import {
     Arg,
     Ctx,
@@ -11,9 +9,10 @@ import {
     Resolver,
     UseMiddleware,
 } from 'type-graphql';
-import { Post } from '../entities/Post';
 import { getConnection } from 'typeorm';
-import { GraphQLBoolean } from 'graphql';
+import { Post } from '../entities/Post';
+import { isAuth } from '../middleware/isAuth';
+import { Mycontext } from '../types';
 
 @InputType()
 class PostInput {
