@@ -1,0 +1,10 @@
+export const __prod__ = process.env.NODE_ENV === 'production';
+export const __port__ = process.env.PORT || 4000;
+export const COOKIE_NAME = 'qid';
+export const FORGET_PASSOWRD_PREFIX = 'forget-password:';
+export const PG_USERNAME = process.env.PG_USERNAME || 'postgres';
+export const PG_PASSWORD = process.env.PG_PASSWORD;
+export const PG_HOST = process.env.PG_HOST || 'localhost';
+export const REDIS_HOST = process.env.REDIS_HOST || 'localhost';
+export const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
+export const COOKIE_SECRET = process.env.COOKIE_SECRET || 'secret';
