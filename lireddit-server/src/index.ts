@@ -28,8 +28,6 @@ import { UserResolver } from './resolvers/user';
 import { Mycontext } from './types';
 import path from 'path';
 
-console.log(process.env.PG_HOST, PG_HOST);
-
 const main = async () => {
     const conn = await createConnection({
         type: 'postgres',
@@ -39,9 +37,11 @@ const main = async () => {
         host: PG_HOST,
         logging: true,
         synchronize: true,
-        migrations: [path.join(__dirname, './migrations.*')],
+        migrations: [path.join(__dirname, './migrations/*')],
         entities: [Post, User],
     });
+    console.log('migrations:', conn.migrations);
+
     await conn.runMigrations();
     const app = express();
 
