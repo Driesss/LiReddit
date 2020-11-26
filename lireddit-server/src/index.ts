@@ -40,7 +40,6 @@ const main = async () => {
         migrations: [path.join(__dirname, './migrations/*')],
         entities: [Post, User],
     });
-    console.log('migrations:', conn.migrations);
 
     await conn.runMigrations();
     const app = express();
