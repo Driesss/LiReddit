@@ -36,6 +36,9 @@ export const createUrqlClient = (ssrExchange: any) => ({
     exchanges: [
         dedupExchange,
         cacheExchange({
+            keys: {
+                PaginatedPosts: () => null,
+            },
             resolvers: {
                 Query: {
                     posts: cursorPagination(),
@@ -106,17 +109,25 @@ export const cursorPagination = (): Resolver => {
         }
 
         const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
-        const isInCache = cache.resolveFieldByKey(entityKey, fieldKey);
+        const isInCache = cache.resolve(
+            cache.resolveFieldByKey(entityKey, fieldKey) as string,
+            'posts'
+        );
         info.partial = !isInCache;
+        let hasMore = true;
         const results: string[] = [];
         fieldInfos.forEach((fi) => {
-            const data = cache.resolveFieldByKey(
+            const key = cache.resolveFieldByKey(
                 entityKey,
                 fi.fieldKey
-            ) as string[];
+            ) as string;
+            const data = cache.resolve(key, 'posts') as string[];
+            const _hasMore = cache.resolve(key, 'hasMore');
+            if (!_hasMore) hasMore = _hasMore as boolean;
             results.push(...data);
         });
-        return results;
+
+        return { __typename: 'PaginatedPosts', hasMore, posts: results };
 
         // const visited = new Set();
         // let result: NullArray<string> = [];
