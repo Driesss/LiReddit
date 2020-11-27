@@ -5,11 +5,7 @@ import { useState } from 'react';
 import EditDeletePostButtons from '../components/EditDeletePostButtons';
 import { Layout } from '../components/Layout';
 import { UpdootSection } from '../components/UpdootSection';
-import {
-    useDeletePostMutation,
-    useMeQuery,
-    usePostsQuery,
-} from '../generated/graphql';
+import { usePostsQuery } from '../generated/graphql';
 import { createUrqlClient } from '../utils/createUrqlClient';
 
 const Index = () => {
@@ -18,13 +14,15 @@ const Index = () => {
         cursor: null as string | null,
     });
 
-    const [{ data: meData }] = useMeQuery();
-    const [{ data, fetching }] = usePostsQuery({ variables });
-
-    const [, deletePost] = useDeletePostMutation();
+    const [{ data, error, fetching }] = usePostsQuery({ variables });
 
     if (!fetching && !data) {
-        return <div> you get no posts for some reason</div>;
+        return (
+            <div>
+                <div>you get no posts for some reason</div>
+                <div>{error}</div>
+            </div>
+        );
     }
 
     return (
