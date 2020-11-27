@@ -1,26 +1,56 @@
 import { Box, Button, Flex } from '@chakra-ui/core';
-import { Formik, Form } from 'formik';
+import { Form, Formik } from 'formik';
 import { withUrqlClient } from 'next-urql';
-import React from 'react';
-import InputField from '../components/InputField';
-import { useCreatePostMutation } from '../generated/graphql';
-import { createUrqlClient } from '../utils/createUrqlClient';
 import { useRouter } from 'next/router';
-import { Layout } from '../components/Layout';
-import { useIsAuth } from '../utils/useIsAuth';
+import React from 'react';
+import InputField from '../../../components/InputField';
+import { Layout } from '../../../components/Layout';
+import {
+    usePostQuery,
+    useUpdatePostMutation,
+} from '../../../generated/graphql';
+import { createUrqlClient } from '../../../utils/createUrqlClient';
+import { useGetIntId } from '../../../utils/useGetIntId';
 
-const createPost: React.FC<{}> = ({}) => {
+const EditPost: React.FC<{}> = ({}) => {
+    const intId = useGetIntId();
+    const [{ data, fetching }] = usePostQuery({
+        pause: intId === -1,
+        variables: { id: intId },
+    });
+    const [, updatePost] = useUpdatePostMutation();
     const router = useRouter();
-    useIsAuth();
-    const [, createPost] = useCreatePostMutation();
+
+    if (fetching) {
+        return (
+            <Layout>
+                <div>loading...</div>
+            </Layout>
+        );
+    }
+
+    if (!data?.post) {
+        return (
+            <Layout>
+                <Box>could not find post</Box>
+            </Layout>
+        );
+    }
+
     return (
         <Layout variant="small">
             <Formik
-                initialValues={{ title: '', text: '' }}
+                initialValues={{
+                    title: data.post.title,
+                    text: data.post.text,
+                }}
                 onSubmit={async (values) => {
-                    const { error } = await createPost({ input: values });
+                    const { error } = await updatePost({
+                        id: intId,
+                        ...values,
+                    });
                     if (!error) {
-                        router.push('/');
+                        router.back();
                     }
                 }}
             >
@@ -45,7 +75,7 @@ const createPost: React.FC<{}> = ({}) => {
                                 isLoading={isSubmitting}
                                 variantColor="teal"
                             >
-                                create post
+                                update post
                             </Button>
                             <Button
                                 type="button"
@@ -64,4 +94,4 @@ const createPost: React.FC<{}> = ({}) => {
     );
 };
 
-export default withUrqlClient(createUrqlClient)(createPost);
+export default withUrqlClient(createUrqlClient)(EditPost);
