@@ -1,3 +1,4 @@
+import { Updoot } from '../entities/Updoot';
 import {
     Arg,
     Ctx,
@@ -47,23 +48,50 @@ export class Postresolver {
         @Arg('value', () => Int) value: number,
         @Ctx() { req }: Mycontext
     ) {
+        const { userId } = req.session;
+        const updoot = await Updoot.findOne({ where: { postId, userId } });
         const isUpdoot = value !== -1;
         const realValue = isUpdoot ? 1 : -1;
-        const { userId } = req.session;
-        await getConnection().query(
-            `
-            START TRANSACTION;
 
-            INSERT INTO updoot("userId", "postId", value)
-            VALUES (${userId},${postId},${realValue});
+        // the user has voted on the post before
+        // and they are changing their vote
+        if (updoot && updoot.value !== realValue) {
+            await getConnection().transaction(async (tm) => {
+                await tm.query(
+                    `
+                    UPDATE updoot
+                    SET value = $1
+                    WHERE "postId" = $2 and "userId" = $3`,
+                    [value, postId, userId]
+                );
+                await tm.query(
+                    `
+                    UPDATE post
+                    SET points = points + $1
+                    WHERE id = $2;`,
+                    [2 * realValue, postId]
+                );
+            });
+        } else if (!updoot) {
+            // has never voted before
 
-            UPDATE post
-            SET points = points + ${realValue}
-            WHERE id = ${postId};
+            await getConnection().transaction(async (tm) => {
+                await tm.query(
+                    `
+                    INSERT INTO updoot("userId", "postId", value)
+                    VALUES ($1,$2,$3);`,
+                    [userId, postId, value]
+                );
 
-            COMMIT;
-            `
-        );
+                await tm.query(
+                    `
+                    UPDATE post
+                    SET points = points + $1
+                    WHERE id = $2;`,
+                    [value, postId]
+                );
+            });
+        }
         return true;
     }
 
