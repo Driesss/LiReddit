@@ -4,7 +4,7 @@ import {
     fetchExchange,
     stringifyVariables,
 } from 'urql';
-import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver, Cache } from '@urql/exchange-graphcache';
 import {
     LogoutMutation,
     MeQuery,
@@ -30,6 +30,14 @@ export const errorExchange: Exchange = ({ forward }) => (ops$) => {
             }
         })
     );
+};
+
+const invalidateAllPosts = (cache: Cache) => {
+    const allFields = cache.inspectFields('Query');
+    const fieldInfos = allFields.filter((info) => info.fieldName == 'posts');
+    fieldInfos.forEach((fi) => {
+        cache.invalidate('Query', 'posts', fi.arguments || {});
+    });
 };
 
 export const createUrqlClient = (ssrExchange: any, ctx: any) => {
@@ -61,13 +69,13 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                 },
                 updates: {
                     Mutation: {
-                        deletePost: (_result, args, cache, info) => {
+                        deletePost: (_result, args, cache, _info) => {
                             cache.invalidate({
                                 __typename: 'Post',
                                 id: (args as DeletePostMutationVariables).id,
                             });
                         },
-                        vote: (_result, args, cache, info) => {
+                        vote: (_result, args, cache, _info) => {
                             const {
                                 postId,
                                 value,
@@ -102,28 +110,18 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                                 );
                             }
                         },
-                        createPost: (_result, args, cache, info) => {
-                            const allFields = cache.inspectFields('Query');
-                            const fieldInfos = allFields.filter(
-                                (info) => info.fieldName == 'posts'
-                            );
-                            fieldInfos.forEach((fi) => {
-                                cache.invalidate(
-                                    'Query',
-                                    'posts',
-                                    fi.arguments || {}
-                                );
-                            });
+                        createPost: (_result, _args, cache, _info) => {
+                            invalidateAllPosts(cache);
                         },
-                        logout: (_result, args, cache, info) => {
+                        logout: (_result, _args, cache, _info) => {
                             beterUpdateQuery<LogoutMutation, MeQuery>(
                                 cache,
                                 { query: MeDocument },
                                 _result,
-                                (result, query) => ({ me: null })
+                                (_result, _query) => ({ me: null })
                             );
                         },
-                        login: (_result, args, cache, info) => {
+                        login: (_result, _args, cache, _info) => {
                             beterUpdateQuery<LoginMutation, MeQuery>(
                                 cache,
                                 { query: MeDocument },
@@ -138,9 +136,10 @@ export const createUrqlClient = (ssrExchange: any, ctx: any) => {
                                     }
                                 }
                             );
+                            invalidateAllPosts(cache);
                         },
 
-                        register: (_result, args, cache, info) => {
+                        register: (_result, _args, cache, _info) => {
                             beterUpdateQuery<RegisterMutation, MeQuery>(
                                 cache,
                                 { query: MeDocument },
@@ -198,60 +197,5 @@ export const cursorPagination = (): Resolver => {
         });
 
         return { __typename: 'PaginatedPosts', hasMore, posts: results };
-
-        // const visited = new Set();
-        // let result: NullArray<string> = [];
-        // let prevOffset: number | null = null;
-
-        // for (let i = 0; i < size; i++) {
-        //     const { fieldKey, arguments: args } = fieldInfos[i];
-        //     if (args === null || !compareArgs(fieldArgs, args)) {
-        //         continue;
-        //     }
-
-        //     const links = cache.resolveFieldByKey(
-        //         entityKey,
-        //         fieldKey
-        //     ) as string[];
-        //     const currentOffset = args[offsetArgument];
-
-        //     if (
-        //         links === null ||
-        //         links.length === 0 ||
-        //         typeof currentOffset !== 'number'
-        //     ) {
-        //         continue;
-        //     }
-
-        //     const tempResult: NullArray<string> = [];
-
-        //     for (let j = 0; j < links.length; j++) {
-        //         const link = links[j];
-        //         if (visited.has(link)) continue;
-        //         tempResult.push(link);
-        //         visited.add(link);
-        //     }
-
-        //     if (
-        //         (!prevOffset || currentOffset > prevOffset) ===
-        //         (mergeMode === 'after')
-        //     ) {
-        //         result = [...result, ...tempResult];
-        //     } else {
-        //         result = [...tempResult, ...result];
-        //     }
-
-        //     prevOffset = currentOffset;
-        // }
-
-        // const hasCurrentPage = cache.resolve(entityKey, fieldName, fieldArgs);
-        // if (hasCurrentPage) {
-        //     return result;
-        // } else if (!(info as any).store.schema) {
-        //     return undefined;
-        // } else {
-        //     info.partial = true;
-        //     return result;
-        // }
     };
 };
