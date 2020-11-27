@@ -1,4 +1,4 @@
-import { Box, Button } from '@chakra-ui/core';
+import { Box, Button, Flex } from '@chakra-ui/core';
 import { Formik, Form } from 'formik';
 import { withUrqlClient } from 'next-urql';
 import React from 'react';
@@ -39,14 +39,24 @@ const createPost: React.FC<{}> = ({}) => {
                                 textarea
                             />
                         </Box>
-                        <Button
-                            mt={4}
-                            type="submit"
-                            isLoading={isSubmitting}
-                            variantColor="teal"
-                        >
-                            create post
-                        </Button>
+                        <Flex mt={4} justifyContent="space-between">
+                            <Button
+                                type="submit"
+                                isLoading={isSubmitting}
+                                variantColor="teal"
+                            >
+                                create post
+                            </Button>
+                            <Button
+                                type="button"
+                                variantColor="red"
+                                onClick={() => {
+                                    router.back();
+                                }}
+                            >
+                                cancel
+                            </Button>
+                        </Flex>
                     </Form>
                 )}
             </Formik>
