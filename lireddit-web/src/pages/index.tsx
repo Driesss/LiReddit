@@ -1,16 +1,8 @@
-import {
-    Box,
-    Button,
-    Flex,
-    Heading,
-    IconButton,
-    Link,
-    Stack,
-    Text,
-} from '@chakra-ui/core';
+import { Box, Button, Flex, Heading, Link, Stack, Text } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
 import NextLink from 'next/link';
 import { useState } from 'react';
+import EditDeletePostButtons from '../components/EditDeletePostButtons';
 import { Layout } from '../components/Layout';
 import { UpdootSection } from '../components/UpdootSection';
 import {
@@ -66,31 +58,12 @@ const Index = () => {
                                         <Text flex={1} mt={4}>
                                             {p.textSnippet}
                                         </Text>
-                                        {meData?.me?.id !==
-                                        p.creator.id ? null : (
-                                            <Box ml="auto">
-                                                <NextLink
-                                                    href={'/post/edit/[id]'}
-                                                    as={`/post/edit/${p.id}`}
-                                                >
-                                                    <IconButton
-                                                        mr={2}
-                                                        icon="edit"
-                                                        aria-label="Edit Post"
-                                                        as={Link}
-                                                    />
-                                                </NextLink>
-                                                <IconButton
-                                                    icon="delete"
-                                                    aria-label="Delete Post"
-                                                    onClick={() => {
-                                                        deletePost({
-                                                            id: p.id,
-                                                        });
-                                                    }}
-                                                />
-                                            </Box>
-                                        )}
+                                        <Box ml="auto">
+                                            <EditDeletePostButtons
+                                                id={p.id}
+                                                creatorId={p.creator.id}
+                                            />
+                                        </Box>
                                     </Flex>
                                 </Box>
                             </Flex>
