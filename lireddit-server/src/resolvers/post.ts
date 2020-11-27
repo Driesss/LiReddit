@@ -162,7 +162,7 @@ export class Postresolver {
 
     @Query(() => Post, { nullable: true })
     post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
-        return Post.findOne(id);
+        return Post.findOne(id, { relations: ['creator'] });
     }
 
     @Mutation(() => Post)
@@ -192,12 +192,17 @@ export class Postresolver {
 
     @Mutation(() => Boolean)
     @UseMiddleware(isAuth)
-    async deletePost(@Arg('id') id: number): Promise<Boolean> {
-        try {
-            await Post.delete(id);
-            return true;
-        } catch {
-            return false;
-        }
+    async deletePost(
+        @Arg('id', () => Int) id: number,
+        @Ctx() { req }: Mycontext
+    ): Promise<Boolean> {
+        // const post = await Post.findOne(id);
+        // if (!post) return false;
+        // if (post.creatorId !== req.session.userId) {
+        //     throw new Error('not authorized');
+        // }
+        // await Updoot.delete({ postId: id });
+        await Post.delete({ id, creatorId: req.session.userId });
+        return true;
     }
 }
