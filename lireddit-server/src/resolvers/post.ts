@@ -1,4 +1,3 @@
-import { Updoot } from '../entities/Updoot';
 import {
     Arg,
     Ctx,
@@ -15,6 +14,7 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { Post } from '../entities/Post';
+import { Updoot } from '../entities/Updoot';
 import { isAuth } from '../middleware/isAuth';
 import { Mycontext } from '../types';
 
@@ -177,17 +177,23 @@ export class Postresolver {
     @Mutation(() => Post, { nullable: true })
     @UseMiddleware(isAuth)
     async updatePost(
-        @Arg('id') id: number,
-        @Arg('title', () => String, { nullable: true }) title: string
+        @Arg('id', () => Int) id: number,
+        @Arg('title') title: string,
+        @Arg('text') text: string,
+        @Ctx() { req }: Mycontext
     ): Promise<Post | null> {
-        let post = await Post.findOne(id);
-        if (!post) {
-            return null;
-        }
-        if (typeof title !== 'undefined') {
-            await Post.update({ id }, { title });
-        }
-        return post;
+        const result = await getConnection()
+            .createQueryBuilder()
+            .update(Post)
+            .set({ title, text })
+            .where(`id = :id and "creatorId" = :creatorId`, {
+                id,
+                creatorId: req.session.userId,
+            })
+            .returning('*')
+            .execute();
+
+        return result.raw[0];
     }
 
     @Mutation(() => Boolean)
