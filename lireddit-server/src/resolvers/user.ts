@@ -109,7 +109,6 @@ export class UserResolver {
     ) {
         console.log('here');
         const user = await User.findOne({ where: { email } });
-        console.log(user);
 
         if (!user) {
             //user with email not in DB
