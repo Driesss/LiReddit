@@ -19,7 +19,6 @@ WORKDIR /app
 COPY --from=build /build/package.json ./
 COPY --from=build /build/yarn.lock ./
 COPY --from=build /build/.next ./.next
-COPY --from=build /build/public ./public
 RUN yarn add next
 
 EXPOSE 3000
