@@ -1,7 +1,7 @@
+import 'dotenv-safe/config';
 import { ApolloServer } from 'apollo-server-express';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
-import 'dotenv-safe';
 import express from 'express';
 import session from 'express-session';
 import Redis from 'ioredis';
@@ -33,6 +33,7 @@ import { createUpdootLoader } from './utils/createUpdootLoader';
 import { createUserLoader } from './utils/createUserLoader';
 
 const main = async () => {
+    console.log(PG_HOST, REDIS_HOST);
     const conn = await createConnection({
         type: 'postgres',
         database: PG_DBNAME,
@@ -57,7 +58,7 @@ const main = async () => {
         password: REDIS_PASSWORD,
     });
 
-    app.set('proxy', 1);
+    app.set('trust proxy', 1);
     app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 
     app.use(
