@@ -10,9 +10,11 @@ interface NavBarProps {}
 const NavBar: React.FC<NavBarProps> = ({}) => {
     const router = useRouter();
     const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
+
     const [{ data, fetching }] = useMeQuery({
         pause: isServer(),
     });
+
     let body = null;
     // data is loading
     if (fetching) {

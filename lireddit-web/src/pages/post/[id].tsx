@@ -18,9 +18,6 @@ const Post: React.FC<{}> = ({}) => {
         },
     });
 
-    console.log('fetching:', fetching);
-    console.log(data);
-
     if (fetching)
         return (
             <Layout>
